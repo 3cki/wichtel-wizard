@@ -1,16 +1,17 @@
-// Funny Christmas-themed anonymous name generator for Wichteln
+// Lustige weihnachtliche anonyme Namengenerator für Wichteln
 const adjectives = [
-  'Jolly', 'Merry', 'Festive', 'Snowy', 'Sparkly', 'Frosty', 'Cozy', 'Twinkling',
-  'Cheerful', 'Glittering', 'Magical', 'Wintry', 'Gleaming', 'Dazzling', 'Shimmering',
-  'Radiant', 'Enchanted', 'Whimsical', 'Joyful', 'Bright', 'Dancing', 'Singing',
-  'Bouncing', 'Prancing', 'Sleepy', 'Hungry', 'Clumsy', 'Dizzy', 'Giggly', 'Sneaky'
+  'Fröhlicher', 'Festlicher', 'Verschneiter', 'Funkelnder', 'Frostiger', 'Gemütlicher', 'Glitzernder',
+  'Magischer', 'Winterlicher', 'Strahlender', 'Verzauberter', 'Wunderlicher', 'Freudiger', 'Heller',
+  'Tanzender', 'Singender', 'Hüpfender', 'Prunkvoller', 'Verschlafener', 'Hungriger', 'Tollpatschiger',
+  'Schwindeliger', 'Kichernder', 'Heimlicher', 'Munterer', 'Beschwingter', 'Lebhafter', 'Quirliger',
+  'Flauschiger', 'Schnurriger'
 ]
 
 const nouns = [
-  'Reindeer', 'Snowflake', 'Gingerbread', 'Elf', 'Angel', 'Snowman', 'Star',
-  'Cookie', 'Ornament', 'Candle', 'Bell', 'Mittens', 'Scarf', 'Sleigh', 'Present',
-  'Stocking', 'Nutcracker', 'Penguin', 'Cardinal', 'Penguin', 'Hedgehog', 'Owl',
-  'Fox', 'Bear', 'Squirrel', 'Unicorn', 'Dragon', 'Phoenix', 'Griffin', 'Chimera'
+  'Rentier', 'Schneeflocke', 'Lebkuchen', 'Wichtel', 'Engel', 'Schneemann', 'Stern',
+  'Plätzchen', 'Christbaumkugel', 'Kerze', 'Glocke', 'Fäustling', 'Schal', 'Schlitten', 'Geschenk',
+  'Strumpf', 'Nussknacker', 'Pinguin', 'Igel', 'Eule', 'Fuchs', 'Bär', 'Eichhörnchen',
+  'Einhörn', 'Drache', 'Phönix', 'Greif', 'Tannenbaum', 'Lametta', 'Zipfelmütze'
 ]
 
 export function generateAnonymousName(): string {

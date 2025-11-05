@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { generateAnonymousName } from '@/lib/name-generator'
 import { auth } from '@/auth'
+import { sendSMS } from '@/lib/twilio'
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,7 +26,10 @@ export async function POST(request: NextRequest) {
 
     const group = await prisma.group.findUnique({
       where: { code: groupCode },
-      include: { participants: true },
+      include: {
+        participants: true,
+        creator: true,
+      },
     })
 
     if (!group) {
@@ -63,6 +67,12 @@ export async function POST(request: NextRequest) {
         groupId: group.id,
       },
     })
+
+    // Send SMS notification to group creator (if not the creator joining)
+    if (group.creator.phoneNumber && group.creatorId !== session.user.id) {
+      const message = `Wichtel Wizard: ${anonymousName} ist deiner Gruppe "${group.name}" beigetreten! 🎁`
+      await sendSMS(group.creator.phoneNumber, message)
+    }
 
     return NextResponse.json(participant, { status: 201 })
   } catch (error) {

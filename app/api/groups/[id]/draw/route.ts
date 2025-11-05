@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
+import { sendSMS } from '@/lib/twilio'
 
 // Fisher-Yates shuffle algorithm
 function shuffleArray<T>(array: T[]): T[] {
@@ -68,7 +69,14 @@ export async function POST(
 
     const group = await prisma.group.findUnique({
       where: { id },
-      include: { participants: true },
+      include: {
+        participants: {
+          include: {
+            user: true,
+            wishes: true,
+          },
+        },
+      },
     })
 
     if (!group) {
@@ -95,7 +103,17 @@ export async function POST(
 
     if (group.participants.length < 2) {
       return NextResponse.json(
-        { error: 'Need at least 2 participants to draw Secret Santa' },
+        { error: 'Mindestens 2 Teilnehmer sind erforderlich' },
+        { status: 400 }
+      )
+    }
+
+    // Check if all participants have at least one wish
+    const participantsWithoutWishes = group.participants.filter(p => p.wishes.length === 0)
+    if (participantsWithoutWishes.length > 0) {
+      const names = participantsWithoutWishes.map(p => p.anonymousName).join(', ')
+      return NextResponse.json(
+        { error: `Folgende Teilnehmer haben noch keine Wünsche hinzugefügt: ${names}` },
         { status: 400 }
       )
     }
@@ -119,6 +137,19 @@ export async function POST(
         data: { drawn: true },
       }),
     ])
+
+    // Send SMS notifications to all participants
+    const smsPromises = group.participants.map(async (participant) => {
+      if (participant.user.phoneNumber) {
+        const message = `Wichtel Wizard: Die Auslosung für "${group.name}" wurde durchgeführt! Schau nach, wen du beschenken darfst 🎁`
+        await sendSMS(participant.user.phoneNumber, message)
+      }
+    })
+
+    // Send all SMS in parallel (don't wait for them to avoid slowing down the response)
+    Promise.all(smsPromises).catch(error => {
+      console.error('Error sending SMS notifications:', error)
+    })
 
     return NextResponse.json({ success: true, message: 'Secret Santa drawn successfully!' })
   } catch (error) {

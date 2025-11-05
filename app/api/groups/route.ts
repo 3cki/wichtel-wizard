@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, description, drawDate } = body
+    const { name, description } = body
 
     if (!name) {
       return NextResponse.json(
@@ -38,7 +38,6 @@ export async function POST(request: NextRequest) {
         name,
         description,
         code,
-        drawDate: drawDate ? new Date(drawDate) : null,
         creatorId: session.user.id,
         participants: {
           create: {

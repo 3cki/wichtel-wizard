@@ -13,7 +13,11 @@ export async function GET(
       include: {
         receiver: {
           include: {
-            wishes: true,
+            wishes: {
+              orderBy: {
+                priority: 'desc',
+              },
+            },
           },
         },
         group: true,

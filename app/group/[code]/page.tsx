@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Users, Gift, Sparkles, ExternalLink, Trash2 } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import { DevTestParticipants } from '@/components/dev-test-participants'
 
 interface Wish {
   id: string
@@ -32,7 +33,6 @@ interface Group {
   code: string
   description: string | null
   drawn: boolean
-  drawDate: string | null
   creatorId: string
   participants: Participant[]
 }
@@ -49,6 +49,7 @@ export default function GroupPage({ params }: { params: Promise<{ code: string }
   const [participantId, setParticipantId] = useState<string | null>(null)
   const [isJoining, setIsJoining] = useState(false)
   const [assignment, setAssignment] = useState<Assignment | null>(null)
+  const [loadingAssignment, setLoadingAssignment] = useState(false)
 
   // Wish form state
   const [wishTitle, setWishTitle] = useState('')
@@ -92,15 +93,22 @@ export default function GroupPage({ params }: { params: Promise<{ code: string }
   }
 
   const loadAssignment = async (participantId: string) => {
-    if (!group?.drawn) return
+    setLoadingAssignment(true)
     try {
       const response = await fetch(`/api/participants/${participantId}/assignment`)
       if (response.ok) {
         const data = await response.json()
+        console.log('Assignment data received:', data)
+        console.log('Receiver wishes:', data.receiver?.wishes)
         setAssignment(data)
+      } else {
+        const error = await response.json()
+        console.error('Failed to load assignment:', error)
       }
     } catch (error) {
       console.error('Error loading assignment:', error)
+    } finally {
+      setLoadingAssignment(false)
     }
   }
 
@@ -174,9 +182,10 @@ export default function GroupPage({ params }: { params: Promise<{ code: string }
 
       if (response.ok) {
         alert('Das Wichteln wurde ausgelost! Jeder kann nun seine Zuteilung sehen.')
-        loadGroup()
+        // Reload group and assignment
+        await loadGroup()
         if (participantId) {
-          loadAssignment(participantId)
+          await loadAssignment(participantId)
         }
       } else {
         const error = await response.json()
@@ -250,14 +259,14 @@ export default function GroupPage({ params }: { params: Promise<{ code: string }
                   <Users className="h-4 w-4" />
                   <span>{group.participants.length} Teilnehmer</span>
                 </div>
-                {group.drawDate && !group.drawn && (
-                  <div className="flex items-center gap-1">
-                    <span>Auslosung am: {new Date(group.drawDate).toLocaleDateString('de-DE')}</span>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
+
+          {/* Dev Mode: Add Test Participants */}
+          {process.env.NODE_ENV === 'development' && !group.drawn && (
+            <DevTestParticipants groupCode={code} onParticipantsAdded={loadGroup} />
+          )}
 
           {/* Participants List - Visible to everyone */}
           <Card>
@@ -336,53 +345,78 @@ export default function GroupPage({ params }: { params: Promise<{ code: string }
               </Card>
 
               {/* Assignment Card (if drawn) */}
-              {group.drawn && assignment && (
-                <Card className="border-green-500 bg-green-50 dark:bg-green-950">
-                  <CardHeader>
-                    <CardTitle className="text-2xl text-green-700 dark:text-green-400 flex items-center gap-2">
-                      <Gift className="h-6 w-6" />
-                      Deine Wichtel-Zuteilung
-                    </CardTitle>
-                    <CardDescription>
-                      Du beschenkst...
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <h3 className="text-3xl font-bold mb-4">{assignment.receiver.anonymousName}</h3>
-                    {assignment.receiver.wishes.length > 0 ? (
-                      <div className="space-y-3">
-                        <h4 className="font-semibold text-lg">Wunschliste:</h4>
-                        {assignment.receiver.wishes.map((wish) => (
-                          <Card key={wish.id}>
-                            <CardHeader>
-                              <CardTitle className="text-lg">{wish.title}</CardTitle>
-                            </CardHeader>
-                            {(wish.description || wish.url) && (
-                              <CardContent className="space-y-2">
-                                {wish.description && <p className="text-sm">{wish.description}</p>}
-                                {wish.url && (
-                                  <a
-                                    href={wish.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-sm text-primary hover:underline flex items-center gap-1"
-                                  >
-                                    <ExternalLink className="h-3 w-3" />
-                                    Produkt ansehen
-                                  </a>
+              {group.drawn && (
+                <>
+                  {loadingAssignment ? (
+                    <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+                      <CardContent className="py-8 text-center">
+                        <p className="text-lg">Lade deine Zuteilung...</p>
+                      </CardContent>
+                    </Card>
+                  ) : assignment ? (
+                    <Card className="border-green-500 bg-green-50 dark:bg-green-950">
+                      <CardHeader>
+                        <CardTitle className="text-2xl text-green-700 dark:text-green-400 flex items-center gap-2">
+                          <Gift className="h-6 w-6" />
+                          Deine Wichtel-Zuteilung
+                        </CardTitle>
+                        <CardDescription>
+                          Du beschenkst...
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <h3 className="text-3xl font-bold mb-4">{assignment.receiver.anonymousName}</h3>
+                        {assignment.receiver.wishes.length > 0 ? (
+                          <div className="space-y-3">
+                            <h4 className="font-semibold text-lg">Wunschliste:</h4>
+                            {assignment.receiver.wishes.map((wish) => (
+                              <Card key={wish.id}>
+                                <CardHeader>
+                                  <CardTitle className="text-lg">{wish.title}</CardTitle>
+                                </CardHeader>
+                                {(wish.description || wish.url) && (
+                                  <CardContent className="space-y-2">
+                                    {wish.description && <p className="text-sm">{wish.description}</p>}
+                                    {wish.url && (
+                                      <a
+                                        href={wish.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-sm text-primary hover:underline flex items-center gap-1"
+                                      >
+                                        <ExternalLink className="h-3 w-3" />
+                                        Produkt ansehen
+                                      </a>
+                                    )}
+                                  </CardContent>
                                 )}
-                              </CardContent>
-                            )}
-                          </Card>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground">
-                        Diese Person hat noch keine Wünsche hinzugefügt.
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
+                              </Card>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground">
+                            Diese Person hat noch keine Wünsche hinzugefügt.
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Card className="border-red-500 bg-red-50 dark:bg-red-950">
+                      <CardContent className="py-8">
+                        <p className="text-center text-lg mb-4">
+                          Deine Zuteilung konnte nicht geladen werden.
+                        </p>
+                        <Button
+                          onClick={() => participantId && loadAssignment(participantId)}
+                          className="mx-auto block"
+                          variant="outline"
+                        >
+                          Erneut versuchen
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </>
               )}
 
               {/* My Wishlist */}

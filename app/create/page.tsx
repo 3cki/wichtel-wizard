@@ -15,7 +15,6 @@ export default function CreateGroup() {
   const { data: session, status } = useSession()
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [drawDate, setDrawDate] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
@@ -43,7 +42,7 @@ export default function CreateGroup() {
       const response = await fetch('/api/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, description, drawDate }),
+        body: JSON.stringify({ name, description }),
       })
 
       if (response.ok) {
@@ -95,24 +94,11 @@ export default function CreateGroup() {
                 <Label htmlFor="description">Beschreibung (Optional)</Label>
                 <Textarea
                   id="description"
-                  placeholder="Füge Details zu deiner Wichtel-Gruppe hinzu..."
+                  placeholder="Füge Details zu deiner Wichtel-Gruppe hinzu (z.B. Budget, Thema)..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                 />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="drawDate">Auslosung am (Optional)</Label>
-                <Input
-                  id="drawDate"
-                  type="date"
-                  value={drawDate}
-                  onChange={(e) => setDrawDate(e.target.value)}
-                />
-                <p className="text-sm text-muted-foreground">
-                  Lege ein Datum fest, wann das Wichteln ausgelost werden soll
-                </p>
               </div>
 
               <Button
