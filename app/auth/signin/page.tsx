@@ -15,6 +15,7 @@ export default function SignIn() {
   const callbackUrl = searchParams.get('callbackUrl') || '/'
 
   const [email, setEmail] = useState('')
+  const [name, setName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -24,16 +25,18 @@ export default function SignIn() {
     setError('')
 
     try {
-      const result = await signIn('resend', {
+      const result = await signIn('credentials', {
         email,
+        name,
         redirect: false,
         callbackUrl,
       })
 
       if (result?.error) {
-        setError('Fehler beim Senden der E-Mail. Bitte versuche es erneut.')
+        setError('Fehler beim Anmelden. Bitte versuche es erneut.')
       } else {
-        router.push('/auth/verify-request')
+        router.push(callbackUrl)
+        router.refresh()
       }
     } catch (error) {
       setError('Ein Fehler ist aufgetreten. Bitte versuche es erneut.')
@@ -54,13 +57,13 @@ export default function SignIn() {
           <CardHeader>
             <CardTitle>Anmelden</CardTitle>
             <CardDescription>
-              Gib deine E-Mail-Adresse ein, um einen Anmeldelink zu erhalten
+              Gib deine E-Mail-Adresse ein, um teilzunehmen
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">E-Mail-Adresse</Label>
+                <Label htmlFor="email">E-Mail-Adresse *</Label>
                 <Input
                   id="email"
                   type="email"
@@ -68,6 +71,18 @@ export default function SignIn() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="name">Name (Optional)</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="Dein Name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   disabled={isLoading}
                 />
               </div>
@@ -81,13 +96,12 @@ export default function SignIn() {
                 className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? 'Wird gesendet...' : 'Anmeldelink senden'}
+                {isLoading ? 'Wird angemeldet...' : 'Anmelden'}
               </Button>
             </form>
 
             <div className="mt-4 text-center text-sm text-muted-foreground">
-              <p>Du erhältst eine E-Mail mit einem magischen Link</p>
-              <p>zum Anmelden - kein Passwort erforderlich!</p>
+              <p>Keine Registrierung erforderlich - einfach E-Mail eingeben!</p>
             </div>
           </CardContent>
         </Card>

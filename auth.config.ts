@@ -1,14 +1,40 @@
 import type { NextAuthConfig } from 'next-auth'
-import Resend from 'next-auth/providers/resend'
+import Credentials from 'next-auth/providers/credentials'
 
 export default {
   providers: [
-    Resend({
-      from: process.env.EMAIL_FROM || 'onboarding@resend.dev',
+    Credentials({
+      credentials: {
+        email: { label: "E-Mail", type: "email" },
+        name: { label: "Name", type: "text" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email) return null
+
+        // Simple auth - just accept any email
+        return {
+          id: credentials.email as string,
+          email: credentials.email as string,
+          name: (credentials.name as string) || null,
+        }
+      },
     }),
   ],
   pages: {
     signIn: '/auth/signin',
-    verifyRequest: '/auth/verify-request',
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string
+      }
+      return session
+    },
   },
 } satisfies NextAuthConfig
