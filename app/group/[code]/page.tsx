@@ -98,8 +98,6 @@ export default function GroupPage({ params }: { params: Promise<{ code: string }
       const response = await fetch(`/api/participants/${participantId}/assignment`)
       if (response.ok) {
         const data = await response.json()
-        console.log('Assignment data received:', data)
-        console.log('Receiver wishes:', data.receiver?.wishes)
         setAssignment(data)
       } else {
         const error = await response.json()

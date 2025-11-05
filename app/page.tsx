@@ -83,13 +83,16 @@ export default function Home() {
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto text-center mb-12">
           <div className="flex items-center justify-center mb-4">
-            <Gift className="h-12 w-12 text-primary mr-3" />
-            <h1 className="text-5xl font-bold">
+            <span className="text-6xl mr-3">🎅</span>
+            <h1 className="text-5xl font-bold text-foreground">
               Wichtel Wizard
             </h1>
+            <span className="text-6xl ml-3">🎄</span>
           </div>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-xl text-muted-foreground flex items-center justify-center gap-2">
+            <span>✨</span>
             Organisiere dein Wichteln ganz einfach online
+            <span>✨</span>
           </p>
         </div>
 
@@ -136,9 +139,12 @@ export default function Home() {
         )}
 
         <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-16">
-          <Card>
+          <Card className="border-2 border-primary/20 hover:border-primary/40 transition-all hover:shadow-lg">
             <CardHeader>
-              <CardTitle>Neue Gruppe erstellen</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-2xl">🎁</span>
+                Neue Gruppe erstellen
+              </CardTitle>
               <CardDescription>
                 Starte eine neue Wichtel-Gruppe für Freunde, Familie oder Kollegen
               </CardDescription>
@@ -149,14 +155,18 @@ export default function Home() {
                 size="lg"
                 onClick={() => router.push('/create')}
               >
+                <Gift className="mr-2 h-5 w-5" />
                 Gruppe erstellen
               </Button>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-2 border-secondary/20 hover:border-secondary/40 transition-all hover:shadow-lg">
             <CardHeader>
-              <CardTitle>Gruppe beitreten</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <span className="text-2xl">🎄</span>
+                Gruppe beitreten
+              </CardTitle>
               <CardDescription>
                 Gib deinen Gruppen-Code ein, um mitzumachen
               </CardDescription>
@@ -187,49 +197,56 @@ export default function Home() {
         </div>
 
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-8">So funktioniert's</h2>
+          <h2 className="text-2xl font-bold text-center mb-8 flex items-center justify-center gap-2">
+            <span>🎅</span>
+            So funktioniert's
+            <span>🎅</span>
+          </h2>
           <div className="grid md:grid-cols-3 gap-6">
-            <Card>
+            <Card className="border-accent/30">
               <CardHeader>
-                <div className="flex items-center gap-2">
-                  <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="text-5xl">🎁</div>
+                  <div className="bg-primary text-primary-foreground rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">
                     1
                   </div>
                   <CardTitle className="text-lg">Erstellen oder Beitreten</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground text-center">
                   Starte eine neue Gruppe oder tritt einer bestehenden mit dem Gruppen-Code bei
                 </p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="border-accent/30">
               <CardHeader>
-                <div className="flex items-center gap-2">
-                  <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="text-5xl">📝</div>
+                  <div className="bg-secondary text-secondary-foreground rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">
                     2
                   </div>
                   <CardTitle className="text-lg">Wünsche hinzufügen</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground text-center">
                   Erstelle deine Wunschliste mit Geschenkideen für deinen Wichtel
                 </p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="border-accent/30">
               <CardHeader>
-                <div className="flex items-center gap-2">
-                  <div className="bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center font-bold">
+                <div className="flex flex-col items-center text-center gap-3">
+                  <div className="text-5xl">✨</div>
+                  <div className="bg-primary text-primary-foreground rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg">
                     3
                   </div>
                   <CardTitle className="text-lg">Auslosen & Schenken</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground text-center">
                   Die App lost aus und zeigt dir, wen du beschenken darfst - samt Wunschliste
                 </p>
               </CardContent>
