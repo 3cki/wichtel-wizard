@@ -1,4 +1,4 @@
-# Wichteln Wizard
+# Wichtel Wizard
 
 A modern web application for organizing Secret Santa ("Wichteln") gift exchanges with friends, family, or colleagues.
 

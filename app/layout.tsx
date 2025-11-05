@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Wichteln Wizard",
+  title: "Wichtel Wizard",
   description: "Organisiere dein Wichteln ganz einfach online",
 };
 

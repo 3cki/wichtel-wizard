@@ -1,4 +1,4 @@
-# Using Wichteln Wizard
+# Using Wichtel Wizard
 
 A step-by-step guide to organizing your Secret Santa gift exchange.
 
@@ -6,7 +6,7 @@ A step-by-step guide to organizing your Secret Santa gift exchange.
 
 ### Step 1: Create a Group
 
-1. Go to the Wichteln Wizard homepage
+1. Go to the Wichtel Wizard homepage
 2. Click "Create New Group"
 3. Fill in the group details:
    - **Group Name**: e.g., "Smith Family Christmas 2024"
@@ -44,7 +44,7 @@ Once everyone is ready:
 ### Step 1: Join a Group
 
 1. Get the group code from your organizer
-2. Go to Wichteln Wizard homepage
+2. Go to Wichtel Wizard homepage
 3. Enter the code in "Join Existing Group"
 4. Click "Join Group"
 5. You'll be assigned a fun anonymous name (e.g., "Jolly Reindeer")

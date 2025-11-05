@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { auth } from '@/auth'
 
 // Fisher-Yates shuffle algorithm
 function shuffleArray<T>(array: T[]): T[] {
@@ -56,6 +57,15 @@ export async function POST(
   try {
     const { id } = await params
 
+    // Check authentication
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Nicht autorisiert' },
+        { status: 401 }
+      )
+    }
+
     const group = await prisma.group.findUnique({
       where: { id },
       include: { participants: true },
@@ -65,6 +75,14 @@ export async function POST(
       return NextResponse.json(
         { error: 'Group not found' },
         { status: 404 }
+      )
+    }
+
+    // Check if user is the group creator
+    if (group.creatorId !== session.user.id) {
+      return NextResponse.json(
+        { error: 'Nur der Gruppen-Ersteller kann die Auslosung durchführen' },
+        { status: 403 }
       )
     }
 

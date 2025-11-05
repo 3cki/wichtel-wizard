@@ -1,6 +1,6 @@
-# Deploying Wichteln Wizard to Vercel
+# Deploying Wichtel Wizard to Vercel
 
-This guide will walk you through deploying your Wichteln Wizard application to Vercel with Vercel Postgres.
+This guide will walk you through deploying your Wichtel Wizard application to Vercel with Vercel Postgres.
 
 ## Prerequisites
 

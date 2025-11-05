@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Users, Gift, Sparkles, ExternalLink, Trash2 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
 
 interface Wish {
   id: string
@@ -21,7 +22,7 @@ interface Wish {
 interface Participant {
   id: string
   anonymousName: string
-  email: string | null
+  userId: string
   wishes: Wish[]
 }
 
@@ -32,6 +33,7 @@ interface Group {
   description: string | null
   drawn: boolean
   drawDate: string | null
+  creatorId: string
   participants: Participant[]
 }
 
@@ -42,9 +44,9 @@ interface Assignment {
 export default function GroupPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = use(params)
   const router = useRouter()
+  const { data: session, status } = useSession()
   const [group, setGroup] = useState<Group | null>(null)
   const [participantId, setParticipantId] = useState<string | null>(null)
-  const [email, setEmail] = useState('')
   const [isJoining, setIsJoining] = useState(false)
   const [assignment, setAssignment] = useState<Assignment | null>(null)
 
@@ -54,13 +56,12 @@ export default function GroupPage({ params }: { params: Promise<{ code: string }
   const [wishUrl, setWishUrl] = useState('')
 
   useEffect(() => {
-    loadGroup()
-    const savedParticipantId = localStorage.getItem(`participant_${code}`)
-    if (savedParticipantId) {
-      setParticipantId(savedParticipantId)
-      loadAssignment(savedParticipantId)
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin')
+    } else if (status === 'authenticated') {
+      loadGroup()
     }
-  }, [code])
+  }, [code, status, router])
 
   const loadGroup = async () => {
     try {
@@ -68,6 +69,19 @@ export default function GroupPage({ params }: { params: Promise<{ code: string }
       if (response.ok) {
         const data = await response.json()
         setGroup(data)
+
+        // Check if user is already a participant
+        if (session?.user?.id) {
+          const myParticipant = data.participants.find(
+            (p: Participant) => p.userId === session.user?.id
+          )
+          if (myParticipant) {
+            setParticipantId(myParticipant.id)
+            if (data.drawn) {
+              loadAssignment(myParticipant.id)
+            }
+          }
+        }
       } else {
         alert('Gruppe nicht gefunden')
         router.push('/')
@@ -96,13 +110,12 @@ export default function GroupPage({ params }: { params: Promise<{ code: string }
       const response = await fetch('/api/participants', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupCode: code, email: email || null }),
+        body: JSON.stringify({ groupCode: code }),
       })
 
       if (response.ok) {
         const participant = await response.json()
         setParticipantId(participant.id)
-        localStorage.setItem(`participant_${code}`, participant.id)
         loadGroup()
       } else {
         alert('Fehler beim Beitreten zur Gruppe. Bitte versuche es erneut.')
@@ -246,29 +259,57 @@ export default function GroupPage({ params }: { params: Promise<{ code: string }
             </CardContent>
           </Card>
 
+          {/* Participants List - Visible to everyone */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Teilnehmer ({group.participants.length})</CardTitle>
+              <CardDescription>
+                {participantId
+                  ? 'Alle Mitglieder dieser Wichtel-Gruppe'
+                  : 'Diese Personen sind bereits dabei - tritt auch bei!'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {group.participants.map((participant) => (
+                  <div
+                    key={participant.id}
+                    className={`flex justify-between items-center p-3 rounded-lg ${
+                      participant.id === participantId
+                        ? 'bg-primary/10 border border-primary'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{participant.anonymousName}</span>
+                      {participant.id === participantId && (
+                        <Badge variant="default" className="text-xs">Du</Badge>
+                      )}
+                    </div>
+                    <Badge variant="secondary">
+                      {participant.wishes.length} Wunsch/Wünsche
+                    </Badge>
+                  </div>
+                ))}
+                {group.participants.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">
+                    Noch keine Teilnehmer. Sei der Erste!
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
           {!participantId ? (
             /* Join Group Card */
             <Card>
               <CardHeader>
                 <CardTitle>Dieser Wichtel-Gruppe beitreten</CardTitle>
                 <CardDescription>
-                  Gib optional deine E-Mail ein und tritt der Gruppe bei. Du erhältst einen lustigen anonymen Namen!
+                  Tritt der Gruppe bei und erhalte einen lustigen anonymen Namen!
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-Mail (Optional)</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="deine.email@beispiel.de"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Optional für Benachrichtigungen
-                  </p>
-                </div>
+              <CardContent>
                 <Button
                   className="w-full"
                   size="lg"
@@ -438,8 +479,8 @@ export default function GroupPage({ params }: { params: Promise<{ code: string }
                 </CardContent>
               </Card>
 
-              {/* Draw Secret Santa Button */}
-              {!group.drawn && (
+              {/* Draw Secret Santa Button - Only visible to creator */}
+              {!group.drawn && group.creatorId === session?.user?.id && (
                 <Card className="border-primary">
                   <CardHeader>
                     <CardTitle>Bereit zum Auslosen?</CardTitle>
@@ -465,31 +506,6 @@ export default function GroupPage({ params }: { params: Promise<{ code: string }
                   </CardContent>
                 </Card>
               )}
-
-              {/* Participants List */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Gruppen-Teilnehmer</CardTitle>
-                  <CardDescription>
-                    {group.participants.length} Mitglied(er) in dieser Gruppe
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {group.participants.map((participant) => (
-                      <div
-                        key={participant.id}
-                        className="flex justify-between items-center p-3 bg-muted rounded-lg"
-                      >
-                        <span className="font-medium">{participant.anonymousName}</span>
-                        <Badge variant="secondary">
-                          {participant.wishes.length} Wunsch/Wünsche
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
             </>
           )}
         </div>

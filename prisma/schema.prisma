@@ -17,8 +17,9 @@ datasource db {
 model User {
   id            String    @id @default(cuid())
   name          String?
-  email         String    @unique
+  email         String?   @unique
   emailVerified DateTime?
+  phoneNumber   String?   @unique
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -26,6 +27,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   participants  Participant[]
+  createdGroups Group[]   @relation("GroupCreator")
 }
 
 model Account {
@@ -74,9 +76,10 @@ model Group {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  drawDate    DateTime? // When the Secret Santa assignments will be revealed
   drawn       Boolean  @default(false)
+  creatorId   String   // User who created the group
 
+  creator      User          @relation("GroupCreator", fields: [creatorId], references: [id], onDelete: Cascade)
   participants Participant[]
   assignments  Assignment[]
 }

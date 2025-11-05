@@ -13,7 +13,7 @@ export function Header() {
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl">
           <Gift className="h-6 w-6 text-primary" />
-          Wichteln Wizard
+          Wichtel Wizard
         </Link>
 
         {session?.user && (

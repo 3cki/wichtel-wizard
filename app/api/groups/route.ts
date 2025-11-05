@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { generateUniqueGroupCode } from '@/lib/name-generator'
+import { generateUniqueGroupCode, generateAnonymousName } from '@/lib/name-generator'
+import { auth } from '@/auth'
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: 'Nicht autorisiert' },
+        { status: 401 }
+      )
+    }
+
     const body = await request.json()
     const { name, description, drawDate } = body
 
@@ -23,12 +32,20 @@ export async function POST(request: NextRequest) {
       codeExists = await prisma.group.findUnique({ where: { code } })
     }
 
+    // Create group and automatically add creator as participant
     const group = await prisma.group.create({
       data: {
         name,
         description,
         code,
         drawDate: drawDate ? new Date(drawDate) : null,
+        creatorId: session.user.id,
+        participants: {
+          create: {
+            anonymousName: generateAnonymousName(),
+            userId: session.user.id,
+          },
+        },
       },
     })
 
