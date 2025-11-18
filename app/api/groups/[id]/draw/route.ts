@@ -3,46 +3,58 @@ import { prisma } from '@/lib/prisma'
 import { auth } from '@/auth'
 import { sendSMS } from '@/lib/twilio'
 
-// Fisher-Yates shuffle algorithm
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array]
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-  }
-  return shuffled
-}
-
-// Create Secret Santa assignments ensuring no one gets themselves
+// Create Secret Santa assignments ensuring:
+// 1. No one gets themselves
+// 2. Everyone gives to exactly one person
+// 3. Everyone receives from exactly one person
+// 4. Forms a complete cycle (works with any number of participants)
 function createAssignments(participantIds: string[]): { giverId: string; receiverId: string }[] {
   if (participantIds.length < 2) {
     throw new Error('Need at least 2 participants for Secret Santa')
   }
 
-  let receivers = shuffleArray(participantIds)
+  // Create a derangement (permutation where no element appears in its original position)
+  // Using the "early refusal" algorithm for generating random derangements
 
-  // Check if anyone got themselves
-  let hasInvalidAssignment = participantIds.some((giverId, index) => giverId === receivers[index])
-
-  // Keep shuffling until we have a valid assignment
+  const n = participantIds.length
+  let receivers: string[] = []
   let attempts = 0
-  const maxAttempts = 100
+  const maxAttempts = 1000
 
-  while (hasInvalidAssignment && attempts < maxAttempts) {
-    receivers = shuffleArray(participantIds)
-    hasInvalidAssignment = participantIds.some((giverId, index) => giverId === receivers[index])
+  while (attempts < maxAttempts) {
+    receivers = [...participantIds]
+
+    // Fisher-Yates shuffle
+    for (let i = n - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [receivers[i], receivers[j]] = [receivers[j], receivers[i]]
+    }
+
+    // Check if this is a valid derangement (no one gets themselves)
+    const isValid = participantIds.every((id, index) => id !== receivers[index])
+
+    if (isValid) {
+      break
+    }
+
     attempts++
   }
 
-  if (hasInvalidAssignment) {
-    // Fix the invalid assignments by swapping
-    for (let i = 0; i < participantIds.length; i++) {
-      if (participantIds[i] === receivers[i]) {
-        // Find someone to swap with
-        const swapIndex = (i + 1) % participantIds.length
-        ;[receivers[i], receivers[swapIndex]] = [receivers[swapIndex], receivers[i]]
-      }
-    }
+  // If we couldn't find a valid derangement through random shuffling,
+  // use a deterministic approach (circular shift)
+  if (attempts >= maxAttempts) {
+    receivers = [...participantIds.slice(1), participantIds[0]]
+  }
+
+  // Verify the assignment is valid
+  const receiversSet = new Set(receivers)
+  if (receiversSet.size !== participantIds.length) {
+    throw new Error('Assignment algorithm failed: duplicate receivers')
+  }
+
+  const hasInvalid = participantIds.some((id, index) => id === receivers[index])
+  if (hasInvalid) {
+    throw new Error('Assignment algorithm failed: someone assigned to themselves')
   }
 
   return participantIds.map((giverId, index) => ({

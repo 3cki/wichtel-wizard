@@ -15,7 +15,6 @@ function SignInForm() {
   const callbackUrl = searchParams.get('callbackUrl') || '/'
 
   const [phoneNumber, setPhoneNumber] = useState('')
-  const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSendingCode, setIsSendingCode] = useState(false)
@@ -59,7 +58,6 @@ function SignInForm() {
       const result = await signIn('phone', {
         phoneNumber,
         code,
-        name,
         redirect: false,
         callbackUrl,
       })
@@ -144,18 +142,6 @@ function SignInForm() {
                   <p className="text-xs text-muted-foreground">
                     Code wurde an {phoneNumber} gesendet
                   </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name (Optional)</Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Dein Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={isLoading}
-                  />
                 </div>
 
                 {error && (
